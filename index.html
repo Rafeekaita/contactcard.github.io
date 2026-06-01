@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="theme-color" content="#080810"/>
+<title>vCard Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080810;--surface:#0f0f1a;--border:#1e1e30;
+  --gold:#c8a96e;--gold2:#e8c97e;--goldlow:#c8a96e18;
+  --text:#eee8df;--muted:#5a5570;--dim:#2a2740;
+  --serif:'Playfair Display',serif;--mono:'DM Mono',monospace;
+  --r:0px;
+}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--mono);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:28px 16px;overflow-x:hidden;
+}
+/* Noise */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+}
+/* ── SHARED ─────────────────────────────────── */
+.wrap{position:relative;z-index:1;width:100%;max-width:400px;}
+.panel{
+  background:var(--surface);border:1px solid var(--border);
+  padding:36px 28px 28px;position:relative;
+  animation:rise .6s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+.corner{position:absolute;width:10px;height:10px;}
+.corner.tl{top:-1px;left:-1px;border-top:1.5px solid var(--gold);border-left:1.5px solid var(--gold);}
+.corner.tr{top:-1px;right:-1px;border-top:1.5px solid var(--gold);border-right:1.5px solid var(--gold);}
+.corner.bl{bottom:-1px;left:-1px;border-bottom:1.5px solid var(--gold);border-left:1.5px solid var(--gold);}
+.corner.br{bottom:-1px;right:-1px;border-bottom:1.5px solid var(--gold);border-right:1.5px solid var(--gold);}
+.eyebrow{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-bottom:18px;}
+.serif-title{font-family:var(--serif);font-size:clamp(26px,7vw,34px);font-weight:700;line-height:1.05;margin-bottom:6px;}
+.subtitle{font-size:10px;letter-spacing:.14em;color:var(--muted);margin-bottom:28px;}
+.divider{height:1px;background:linear-gradient(90deg,var(--gold) 0%,var(--border) 55%);margin-bottom:24px;opacity:.35;}
+/* ── GENERATOR FORM ─────────────────────────── */
+.fields{display:flex;flex-direction:column;gap:22px;margin-bottom:28px;}
+.field{}
+.field-label{font-size:8px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:7px;}
+.field-icon{color:var(--gold);}
+.field-input{
+  width:100%;background:transparent;border:none;
+  border-bottom:1px solid var(--dim);color:var(--text);
+  font-family:var(--mono);font-size:13px;padding:9px 0;
+  outline:none;transition:border-color .25s;letter-spacing:.03em;
+}
+.field-input::placeholder{color:#2e2b40;}
+.field-input:focus{border-bottom-color:var(--gold);}
+.optional-tag{font-size:8px;color:var(--dim);margin-left:4px;}
+/* Primary button */
+.btn-primary{
+  width:100%;padding:13px;background:var(--gold);color:#080810;
+  border:none;cursor:pointer;font-family:var(--serif);
+  font-size:15px;font-weight:700;letter-spacing:.08em;
+  transition:background .2s,transform .1s;margin-bottom:0;
+  position:relative;overflow:hidden;
+}
+.btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,transparent 55%);pointer-events:none;}
+.btn-primary:hover{background:var(--gold2);}
+.btn-primary:active{transform:scale(.98);}
+.btn-primary:disabled{opacity:.3;cursor:not-allowed;}
+/* ── RESULT PANEL ───────────────────────────── */
+#result{display:none;}
+.result-name{font-family:var(--serif);font-size:clamp(24px,6vw,30px);font-weight:700;line-height:1.1;margin-bottom:3px;}
+.result-role{font-size:10px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;margin-bottom:4px;}
+.result-company{font-size:11px;color:var(--muted);margin-bottom:24px;}
+.info-list{display:flex;flex-direction:column;gap:14px;margin-bottom:26px;}
+.info-row{display:flex;align-items:flex-start;gap:12px;}
+.info-icon{color:var(--gold);font-size:12px;margin-top:1px;flex-shrink:0;}
+.info-body{}
+.info-lbl{font-size:8px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:1px;}
+.info-val{font-size:12px;color:var(--text);}
+.info-val a{color:var(--text);text-decoration:none;}
+.info-val a:hover{color:var(--gold);}
+/* Action buttons */
+.actions{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.btn-save{
+  width:100%;padding:13px;background:var(--gold);color:#080810;
+  border:none;cursor:pointer;font-family:var(--serif);
+  font-size:14px;font-weight:700;letter-spacing:.08em;
+  transition:background .2s;position:relative;overflow:hidden;
+}
+.btn-save::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 55%);pointer-events:none;}
+.btn-save:hover{background:var(--gold2);}
+.btn-outline{
+  width:100%;padding:10px;background:transparent;
+  border:1px solid var(--border);color:var(--muted);cursor:pointer;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  transition:all .2s;
+}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+/* QR panel */
+.qr-section{display:none;text-align:center;padding-top:20px;border-top:1px solid var(--border);animation:fadeIn .3s ease;}
+.qr-section.open{display:block;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.qr-box{display:inline-block;padding:12px;background:#fff;margin-bottom:10px;}
+.qr-hint{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;}
+/* Share link box */
+.share-section{display:none;padding-top:20px;border-top:1px solid var(--border);animation:fadeIn .3s ease;}
+.share-section.open{display:block;}
+.share-label{font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.share-box{
+  display:flex;gap:0;border:1px solid var(--border);overflow:hidden;
+}
+.share-url{
+  flex:1;background:transparent;border:none;color:var(--text);
+  font-family:var(--mono);font-size:10px;padding:10px 12px;
+  outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.copy-btn{
+  background:var(--goldlow);border:none;border-left:1px solid var(--border);
+  color:var(--gold);font-family:var(--mono);font-size:9px;
+  letter-spacing:.1em;padding:0 14px;cursor:pointer;
+  transition:background .2s;white-space:nowrap;
+}
+.copy-btn:hover{background:#c8a96e30;}
+/* QR for generator result */
+.gen-qr-section{margin-top:20px;text-align:center;}
+.gen-qr-box{display:inline-block;padding:10px;background:#fff;margin-bottom:8px;}
+.gen-qr-hint{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+/* Footer */
+.panel-footer{
+  margin-top:24px;padding-top:16px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.footer-tag{font-size:8px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
+.footer-dot{width:3px;height:3px;border-radius:50%;background:var(--gold);opacity:.4;}
+/* Toast */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:var(--gold);color:#080810;font-family:var(--mono);
+  font-size:10px;letter-spacing:.12em;padding:9px 22px;
+  opacity:0;transition:all .3s;pointer-events:none;z-index:99;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* Tabs (generator step 2) */
+.tabs{display:flex;gap:0;border:1px solid var(--border);margin-bottom:20px;}
+.tab{
+  flex:1;padding:9px;background:transparent;border:none;
+  color:var(--muted);font-family:var(--mono);font-size:9px;
+  letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+  transition:all .2s;border-right:1px solid var(--border);
+}
+.tab:last-child{border-right:none;}
+.tab.active{background:var(--goldlow);color:var(--gold);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ══════════════════════════════════════════
+     VIEW: Contact card (URL has params)
+════════════════════════════════════════════ -->
+<div id="view-contact" style="display:none;">
+  <div class="panel">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="eyebrow">── Digital Business Card</div>
+    <div class="result-name" id="vc-name"></div>
+    <div class="result-role" id="vc-title"></div>
+    <div class="result-company" id="vc-company"></div>
+    <div class="divider"></div>
+    <div class="info-list" id="vc-info"></div>
+    <div class="actions">
+      <button class="btn-save" onclick="saveVCF()">＋ Save Contact</button>
+      <button class="btn-outline" onclick="toggleQR()">Show QR Code</button>
+    </div>
+    <div class="qr-section" id="qr-section">
+      <div class="qr-box"><div id="qrcode-view"></div></div>
+      <div class="qr-hint">Scan to share this card</div>
+    </div>
+    <div class="panel-footer">
+      <span class="footer-tag">vCard 3.0</span>
+      <span class="footer-dot"></span>
+      <span class="footer-tag">iOS · Android</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     VIEW: Generator (no params)
+════════════════════════════════════════════ -->
+<div id="view-generator" style="display:none;">
+  <!-- Step 1: form -->
+  <div id="gen-step1" class="panel">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="eyebrow">── vCard Generator</div>
+    <div class="serif-title">Create your<br/><span style="color:var(--gold)">digital card</span></div>
+    <div class="subtitle">Anyone who scans your QR saves you instantly</div>
+    <div class="divider"></div>
+    <div class="fields">
+      <div class="field">
+        <div class="field-label"><span class="field-icon">◈</span>Full Name</div>
+        <input class="field-input" id="g-name" type="text" placeholder="Ahmad Al-Rashid"/>
+      </div>
+      <div class="field">
+        <div class="field-label"><span class="field-icon">◉</span>Phone</div>
+        <input class="field-input" id="g-phone" type="text" placeholder="+963 912 345 678"/>
+      </div>
+      <div class="field">
+        <div class="field-label"><span class="field-icon">◫</span>Company</div>
+        <input class="field-input" id="g-company" type="text" placeholder="Your Company"/>
+      </div>
+      <div class="field">
+        <div class="field-label"><span class="field-icon">◎</span>Email</div>
+        <input class="field-input" id="g-email" type="email" placeholder="ahmad@company.com"/>
+      </div>
+      <div class="field">
+        <div class="field-label"><span class="field-icon">◧</span>Job Title <span class="optional-tag">optional</span></div>
+        <input class="field-input" id="g-title" type="text" placeholder="Marketing Director"/>
+      </div>
+    </div>
+    <button class="btn-primary" id="gen-btn" onclick="generateCard()" disabled>Generate My Card →</button>
+    <div class="panel-footer" style="margin-top:20px;">
+      <span class="footer-tag">Free · No account needed</span>
+      <span class="footer-dot"></span>
+      <span class="footer-tag">Permanent</span>
+    </div>
+  </div>
+
+  <!-- Step 2: result -->
+  <div id="gen-step2" class="panel" style="display:none;">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="eyebrow">── Your Card is Ready</div>
+    <div class="serif-title" id="g-display-name"></div>
+    <div class="result-role" id="g-display-title"></div>
+    <div class="result-company" id="g-display-company" style="margin-bottom:24px;font-size:11px;color:var(--muted);"></div>
+    <div class="divider"></div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('link')">Share Link</button>
+      <button class="tab" onclick="switchTab('qr')">QR Code</button>
+      <button class="tab" onclick="switchTab('preview')">Preview</button>
+    </div>
+
+    <!-- Link tab -->
+    <div class="tab-content active" id="tab-link">
+      <div class="share-label">Your permanent link</div>
+      <div class="share-box">
+        <input class="share-url" id="share-url-input" readonly/>
+        <button class="copy-btn" onclick="copyLink()">COPY</button>
+      </div>
+      <p style="font-size:9px;color:var(--muted);margin-top:10px;letter-spacing:.06em;line-height:1.7;">
+        Share this link — whoever opens it sees your card and can save your contact in one tap. The link never expires.
+      </p>
+    </div>
+
+    <!-- QR tab -->
+    <div class="tab-content" id="tab-qr">
+      <div style="text-align:center;padding:8px 0;">
+        <div class="gen-qr-box"><div id="qrcode-gen"></div></div>
+        <div class="gen-qr-hint" style="margin-bottom:14px;">Scan → saves contact instantly</div>
+        <button class="btn-outline" onclick="downloadQR()" style="width:auto;padding:9px 24px;">↓ Download PNG</button>
+      </div>
+    </div>
+
+    <!-- Preview tab -->
+    <div class="tab-content" id="tab-preview">
+      <div class="info-list" id="g-preview-info"></div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button class="btn-outline" onclick="resetGenerator()">← Make another card</button>
+    </div>
+    <div class="panel-footer">
+      <span class="footer-tag">vCard 3.0</span>
+      <span class="footer-dot"></span>
+      <span class="footer-tag">iOS · Android</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Helpers ────────────────────────────────────────────────────
+function qs(id){ return document.getElementById(id); }
+
+function buildVCard(c){
+  const parts = (c.name||'').trim().split(/\s+/);
+  const last  = parts.length>1 ? parts.pop() : '';
+  const first = parts.join(' ');
+  const lines = [
+    'BEGIN:VCARD','VERSION:3.0',
+    `N:${last};${first};;;`,
+    `FN:${c.name}`,
+    `ORG:${c.company}`,
+    c.title ? `TITLE:${c.title}` : '',
+    `TEL;TYPE=CELL:${c.phone}`,
+    `EMAIL;TYPE=INTERNET:${c.email}`,
+    'END:VCARD'
+  ];
+  return lines.filter(Boolean).join('\r\n');
+}
+
+function showToast(msg, dur=2200){
+  const t = qs('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+// ── Read URL params ────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+const hasContact = params.has('name') && params.has('phone');
+
+// ══════════════════════════════════════════════════════════════
+// CONTACT VIEW
+// ══════════════════════════════════════════════════════════════
+if(hasContact){
+  qs('view-contact').style.display = 'block';
+  const c = {
+    name:    decodeURIComponent(params.get('name')||''),
+    phone:   decodeURIComponent(params.get('phone')||''),
+    company: decodeURIComponent(params.get('company')||''),
+    email:   decodeURIComponent(params.get('email')||''),
+    title:   decodeURIComponent(params.get('title')||''),
+  };
+
+  document.title = c.name;
+  qs('vc-name').textContent    = c.name;
+  qs('vc-title').textContent   = c.title;
+  qs('vc-company').textContent = c.company;
+
+  const rows = [
+    {icon:'◉',label:'Phone',  val:c.phone,  href:'tel:'+c.phone},
+    {icon:'◎',label:'Email',  val:c.email,  href:'mailto:'+c.email},
+    {icon:'◫',label:'Company',val:c.company,href:null},
+  ];
+  qs('vc-info').innerHTML = rows.map(r=>`
+    <div class="info-row">
+      <div class="info-icon">${r.icon}</div>
+      <div class="info-body">
+        <div class="info-lbl">${r.label}</div>
+        <div class="info-val">${r.href?`<a href="${r.href}">${r.val}</a>`:r.val}</div>
+      </div>
+    </div>`).join('');
+
+  // Auto-download vcf
+  function saveVCF(){
+    const blob = new Blob([buildVCard(c)],{type:'text/vcard;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'),{href:url,download:c.name.replace(/\s+/g,'_')+'.vcf'});
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('Contact saved ✓');
+  }
+  window.saveVCF = saveVCF;
+
+  // Auto-trigger save on load
+  setTimeout(saveVCF, 600);
+
+  let qrDone = false;
+  window.toggleQR = function(){
+    const s   = qs('qr-section');
+    const btn = document.querySelector('#view-contact .btn-outline');
+    const open = s.classList.toggle('open');
+    btn.textContent = open ? 'Hide QR Code' : 'Show QR Code';
+    if(open && !qrDone){
+      new QRCode(qs('qrcode-view'),{text:location.href,width:180,height:180,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
+      qrDone = true;
+    }
+  };
+
+// ══════════════════════════════════════════════════════════════
+// GENERATOR VIEW
+// ══════════════════════════════════════════════════════════════
+} else {
+  qs('view-generator').style.display = 'block';
+
+  // Enable button when required fields filled
+  ['g-name','g-phone','g-company','g-email'].forEach(id=>{
+    qs(id).addEventListener('input', ()=>{
+      const ready = ['g-name','g-phone','g-company','g-email'].every(i=>qs(i).value.trim()!=='');
+      qs('gen-btn').disabled = !ready;
+    });
+    qs(id).addEventListener('keydown', e=>{ if(e.key==='Enter') generateCard(); });
+  });
+
+  let genQRDone = false;
+  let shareURL  = '';
+
+  window.generateCard = function(){
+    const c = {
+      name:    qs('g-name').value.trim(),
+      phone:   qs('g-phone').value.trim(),
+      company: qs('g-company').value.trim(),
+      email:   qs('g-email').value.trim(),
+      title:   qs('g-title').value.trim(),
+    };
+    if(!c.name||!c.phone||!c.company||!c.email) return;
+
+    // Build share URL
+    const base = location.origin + location.pathname;
+    const p = new URLSearchParams({
+      name: c.name, phone: c.phone,
+      company: c.company, email: c.email,
+      ...(c.title ? {title:c.title} : {})
+    });
+    shareURL = base + '?' + p.toString();
+
+    // Populate step 2
+    qs('g-display-name').textContent    = c.name;
+    qs('g-display-title').textContent   = c.title;
+    qs('g-display-company').textContent = c.company;
+    qs('share-url-input').value         = shareURL;
+
+    qs('g-preview-info').innerHTML = [
+      {icon:'◉',label:'Phone',  val:c.phone},
+      {icon:'◎',label:'Email',  val:c.email},
+      {icon:'◫',label:'Company',val:c.company},
+      ...(c.title?[{icon:'◧',label:'Title',val:c.title}]:[]),
+    ].map(r=>`
+      <div class="info-row">
+        <div class="info-icon">${r.icon}</div>
+        <div class="info-body">
+          <div class="info-lbl">${r.label}</div>
+          <div class="info-val">${r.val}</div>
+        </div>
+      </div>`).join('');
+
+    qs('gen-step1').style.display = 'none';
+    qs('gen-step2').style.display = 'block';
+
+    // Generate QR (pointing to the share URL)
+    if(!genQRDone){
+      new QRCode(qs('qrcode-gen'),{
+        text: shareURL,
+        width:200,height:200,
+        colorDark:'#000',colorLight:'#fff',
+        correctLevel:QRCode.CorrectLevel.M
+      });
+      genQRDone = true;
+    }
+  };
+
+  window.copyLink = function(){
+    navigator.clipboard.writeText(qs('share-url-input').value)
+      .then(()=>showToast('Link copied ✓'))
+      .catch(()=>{
+        qs('share-url-input').select();
+        document.execCommand('copy');
+        showToast('Link copied ✓');
+      });
+  };
+
+  window.downloadQR = function(){
+    const canvas = document.querySelector('#qrcode-gen canvas');
+    if(!canvas) return;
+    const a = Object.assign(document.createElement('a'),{
+      download:'my-contact-qr.png', href:canvas.toDataURL('image/png')
+    });
+    a.click();
+  };
+
+  window.resetGenerator = function(){
+    qs('gen-step2').style.display='none';
+    qs('gen-step1').style.display='block';
+    genQRDone = false;
+    qs('qrcode-gen').innerHTML = '';
+    switchTab('link');
+  };
+
+  window.switchTab = function(name){
+    document.querySelectorAll('.tab').forEach((t,i)=>{
+      const tabs=['link','qr','preview'];
+      t.classList.toggle('active', tabs[i]===name);
+    });
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    qs('tab-'+name).classList.add('active');
+  };
+}
+</script>
+</body>
+</html>
