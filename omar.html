@@ -89,8 +89,8 @@ body::before{
     </div>
 
     <div class="url-row">
-      QR points to<br/>
-      <span>https://rafeekaita.github.io/<br/>contactcard.github.io/omar.html</span>
+      Scan with any phone → opens Contacts app directly.<br/>
+      <span>If info changes, update this file and reprint the QR.</span>
     </div>
 
     <div class="panel-footer">
@@ -102,8 +102,10 @@ body::before{
 </div>
 
 <script>
+const VCARD = "BEGIN:VCARD\nVERSION:3.0\nN:Alkassmy;Omar Manar;;;\nFN:Omar Manar Alkassmy\nORG:Syrian Saudi Business Council\nTITLE:Strategic Investment Lead\nTEL;TYPE=CELL:+963939442446\nEMAIL;TYPE=INTERNET:omar@sysabc.org\nEND:VCARD";
+
 new QRCode(document.getElementById('qrcode'), {
-  text: 'https://rafeekaita.github.io/contactcard.github.io/omar.html',
+  text: VCARD,
   width: 200,
   height: 200,
   colorDark: '#000000',
