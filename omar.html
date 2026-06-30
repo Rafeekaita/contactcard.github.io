@@ -102,16 +102,18 @@ body::before{
 </div>
 
 <script>
-const VCARD = "BEGIN:VCARD\nVERSION:3.0\nN:Alkassmy;Omar Manar;;;\nFN:Omar Manar Alkassmy\nORG:Syrian Saudi Business Council\nTITLE:Strategic Investment Lead\nTEL;TYPE=CELL:+963939442446\nEMAIL;TYPE=INTERNET:omar@sysabc.org\nEND:VCARD";
-
-new QRCode(document.getElementById('qrcode'), {
-  text: VCARD,
-  width: 200,
-  height: 200,
-  colorDark: '#000000',
-  colorLight: '#ffffff',
-  correctLevel: QRCode.CorrectLevel.M
-});
+fetch('omar.vcf')
+  .then(r => r.text())
+  .then(vcf => {
+    new QRCode(document.getElementById('qrcode'), {
+      text: vcf.trim(),
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  });
 
 function downloadQR(){
   const canvas = document.querySelector('#qrcode canvas');
