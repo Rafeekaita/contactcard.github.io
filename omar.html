@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <meta name="theme-color" content="#080810"/>
-<title>Omar — QR Code</title>
+<title>Omar Manar Alkassmy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -12,8 +12,8 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --bg:#080810;--surface:#0f0f1a;--border:#1e1e30;
-  --gold:#c8a96e;--gold2:#e8c97e;
-  --text:#eee8df;--muted:#5a5570;
+  --gold:#c8a96e;--gold2:#e8c97e;--goldlow:#c8a96e18;
+  --text:#eee8df;--muted:#5a5570;--dim:#2a2740;
   --serif:'Playfair Display',serif;--mono:'DM Mono',monospace;
 }
 body{
@@ -25,7 +25,7 @@ body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
 }
-.wrap{position:relative;z-index:1;width:100%;max-width:380px;}
+.wrap{position:relative;z-index:1;width:100%;max-width:400px;}
 .panel{
   background:var(--surface);border:1px solid var(--border);
   padding:36px 28px 28px;position:relative;
@@ -41,33 +41,51 @@ body::before{
 .corner.tr{top:-1px;right:-1px;border-top:1.5px solid var(--gold);border-right:1.5px solid var(--gold);}
 .corner.bl{bottom:-1px;left:-1px;border-bottom:1.5px solid var(--gold);border-left:1.5px solid var(--gold);}
 .corner.br{bottom:-1px;right:-1px;border-bottom:1.5px solid var(--gold);border-right:1.5px solid var(--gold);}
-.eyebrow{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;}
-.name{font-family:var(--serif);font-size:clamp(22px,6vw,28px);font-weight:700;line-height:1.1;margin-bottom:3px;}
-.role{font-size:9px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;margin-bottom:2px;}
-.org{font-size:10px;color:var(--muted);margin-bottom:24px;}
+.eyebrow{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-bottom:18px;}
+.name{font-family:var(--serif);font-size:clamp(24px,6vw,30px);font-weight:700;line-height:1.1;margin-bottom:3px;}
+.role{font-size:9px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;margin-bottom:3px;}
+.org{font-size:11px;color:var(--muted);margin-bottom:24px;}
 .divider{height:1px;background:linear-gradient(90deg,var(--gold) 0%,var(--border) 55%);margin-bottom:24px;opacity:.35;}
-.qr-wrap{text-align:center;margin-bottom:20px;}
-.qr-box{display:inline-block;padding:14px;background:#fff;margin-bottom:12px;}
-.qr-hint{font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px;}
-.btn-download{
-  display:inline-block;padding:11px 28px;background:var(--gold);color:#080810;
+.info-list{display:flex;flex-direction:column;gap:14px;margin-bottom:26px;}
+.info-row{display:flex;align-items:flex-start;gap:12px;}
+.info-icon{color:var(--gold);font-size:12px;margin-top:1px;flex-shrink:0;}
+.info-lbl{font-size:8px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:1px;}
+.info-val{font-size:12px;color:var(--text);}
+.info-val a{color:var(--text);text-decoration:none;}
+.info-val a:hover{color:var(--gold);}
+.actions{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.btn-save{
+  width:100%;padding:13px;background:var(--gold);color:#080810;
   border:none;cursor:pointer;font-family:var(--serif);
-  font-size:13px;font-weight:700;letter-spacing:.08em;
+  font-size:14px;font-weight:700;letter-spacing:.08em;
   transition:background .2s;position:relative;overflow:hidden;
 }
-.btn-download::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 55%);pointer-events:none;}
-.btn-download:hover{background:var(--gold2);}
-.url-row{
-  margin-top:20px;padding-top:16px;border-top:1px solid var(--border);
-  font-size:8px;color:var(--muted);letter-spacing:.1em;word-break:break-all;line-height:1.8;
+.btn-save::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 55%);pointer-events:none;}
+.btn-save:hover{background:var(--gold2);}
+.btn-outline{
+  width:100%;padding:10px;background:transparent;
+  border:1px solid var(--border);color:var(--muted);cursor:pointer;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  transition:all .2s;
 }
-.url-row span{color:#3a3660;}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.qr-section{display:none;text-align:center;padding-top:20px;border-top:1px solid var(--border);}
+.qr-section.open{display:block;}
+.qr-box{display:inline-block;padding:14px;background:#fff;margin-bottom:10px;}
+.qr-hint{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;}
 .panel-footer{
-  margin-top:20px;padding-top:14px;border-top:1px solid var(--border);
+  margin-top:24px;padding-top:16px;border-top:1px solid var(--border);
   display:flex;justify-content:space-between;align-items:center;
 }
 .footer-tag{font-size:8px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;}
 .footer-dot{width:3px;height:3px;border-radius:50%;background:var(--gold);opacity:.4;}
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:var(--gold);color:#080810;font-family:var(--mono);
+  font-size:10px;letter-spacing:.12em;padding:9px 22px;
+  opacity:0;transition:all .3s;pointer-events:none;z-index:99;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -75,55 +93,117 @@ body::before{
   <div class="panel">
     <div class="corner tl"></div><div class="corner tr"></div>
     <div class="corner bl"></div><div class="corner br"></div>
-
-    <div class="eyebrow">── Contact QR Code</div>
-    <div class="name">Omar Manar Alkassmy</div>
-    <div class="role">Strategic Investment Lead</div>
-    <div class="org">Syrian Saudi Business Council</div>
+    <div class="eyebrow">── Digital Business Card</div>
+    <div class="name" id="c-name"></div>
+    <div class="role" id="c-title"></div>
+    <div class="org"  id="c-org"></div>
     <div class="divider"></div>
-
-    <div class="qr-wrap">
+    <div class="info-list" id="c-info"></div>
+    <div class="actions">
+      <button class="btn-save" onclick="saveContact()">＋ Save Contact</button>
+      <button class="btn-outline" id="qr-btn" onclick="toggleQR()">Get QR Code</button>
+    </div>
+    <div class="qr-section" id="qr-section">
       <div class="qr-box"><div id="qrcode"></div></div>
-      <div class="qr-hint">Scan to save contact instantly</div>
-      <button class="btn-download" onclick="downloadQR()">↓ Download QR PNG</button>
+      <div class="qr-hint">Scan to share · Never expires</div>
+      <button class="btn-outline" style="width:auto;padding:9px 24px;" onclick="downloadQR()">↓ Download QR PNG</button>
     </div>
-
-    <div class="url-row">
-      Scan with any phone → opens Contacts app directly.<br/>
-      <span>If info changes, update this file and reprint the QR.</span>
-    </div>
-
     <div class="panel-footer">
-      <span class="footer-tag">Never expires</span>
+      <span class="footer-tag">vCard 3.0</span>
       <span class="footer-dot"></span>
       <span class="footer-tag">iOS · Android</span>
     </div>
   </div>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
-fetch('omar.vcf?v=' + Date.now())
-  .then(r => r.text())
-  .then(vcf => {
+const PAGE_URL = 'https://rafeekaita.github.io/contactcard.github.io/omar.html';
+let vcfText = '';
+let qrDone  = false;
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function parseVCF(text){
+  const get  = key => { const m = text.match(new RegExp('^'+key+'[^:]*:(.+)','m')); return m ? m[1].trim() : ''; };
+  const getAll = key => [...text.matchAll(new RegExp('^'+key+'[^:]*:(.+)','gm'))].map(m=>m[1].trim());
+  return {
+    name:   get('FN'),
+    title:  get('TITLE'),
+    org:    get('ORG'),
+    phones: getAll('TEL'),
+    emails: getAll('EMAIL'),
+  };
+}
+
+function renderCard(c){
+  document.title = c.name;
+  document.getElementById('c-name').textContent  = c.name;
+  document.getElementById('c-title').textContent = c.title;
+  document.getElementById('c-org').textContent   = c.org;
+
+  const rows = [
+    ...c.phones.map((p,i)=>({icon:'◉', label: c.phones.length>1 ? 'Phone '+(i+1) : 'Phone', val:p, href:'tel:'+p})),
+    ...c.emails.map(e=>({icon:'◎', label:'Email', val:e, href:'mailto:'+e})),
+    {icon:'◫', label:'Organisation', val:c.org, href:null},
+  ];
+
+  document.getElementById('c-info').innerHTML = rows.map(r=>`
+    <div class="info-row">
+      <div class="info-icon">${r.icon}</div>
+      <div>
+        <div class="info-lbl">${r.label}</div>
+        <div class="info-val">${r.href ? `<a href="${r.href}">${r.val}</a>` : r.val}</div>
+      </div>
+    </div>`).join('');
+}
+
+function saveContact(){
+  const blob = new Blob([vcfText], {type:'text/vcard;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {href:url, download:'Omar_Manar_Alkassmy.vcf'});
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('Contact saved ✓');
+}
+
+function toggleQR(){
+  const section = document.getElementById('qr-section');
+  const btn     = document.getElementById('qr-btn');
+  const open    = section.classList.toggle('open');
+  btn.textContent = open ? 'Hide QR Code' : 'Get QR Code';
+  if(open && !qrDone){
     new QRCode(document.getElementById('qrcode'), {
-      text: vcf.trim(),
-      width: 200,
-      height: 200,
-      colorDark: '#000000',
-      colorLight: '#ffffff',
+      text: PAGE_URL,
+      width: 200, height: 200,
+      colorDark: '#000', colorLight: '#fff',
       correctLevel: QRCode.CorrectLevel.M
     });
-  });
+    qrDone = true;
+  }
+}
 
 function downloadQR(){
   const canvas = document.querySelector('#qrcode canvas');
-  if(!canvas) return;
+  if(!canvas){ showToast('Open QR first'); return; }
   const a = Object.assign(document.createElement('a'), {
     download: 'omar-contact-qr.png',
     href: canvas.toDataURL('image/png')
   });
   a.click();
 }
+
+fetch('omar.vcf?v=' + Date.now())
+  .then(r => r.text())
+  .then(text => {
+    vcfText = text;
+    renderCard(parseVCF(text));
+  });
 </script>
 </body>
 </html>
